@@ -109,8 +109,7 @@ def generate_enroll_batch(speaker_num = 1, enroll_num = 1, enroll_start = 0):
     
     enroll_batch = enroll_batch[:,:,:160]               # for train session, fixed length slicing of input batch
 
-    enroll_batch = np.transpose(enroll_batch,
-     axes=(2,0,1))     # transpose [frames, batch, n_mels]
+    enroll_batch = np.transpose(enroll_batch, axes=(2,0,1))     # transpose [frames, batch, n_mels]
 
     return enroll_batch
 

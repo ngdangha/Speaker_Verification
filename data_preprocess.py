@@ -103,7 +103,6 @@ def save_spectrogram_tisv():
     utter_min_len = (config.tisv_frame * config.hop + config.window) * config.sr    # lower bound of utterance length
     total_speaker_num = len(os.listdir(audio_path))
     train_speaker_num= (total_speaker_num//10)*9            # split total data 90% train and 10% test
-    # train_speaker_num= 37
     print("total speaker number : %d"%total_speaker_num)
     print("train : %d, test : %d"%(train_speaker_num, total_speaker_num-train_speaker_num))
     for i, folder in enumerate(os.listdir(audio_path)):
@@ -133,12 +132,9 @@ def save_spectrogram_tisv():
         utterances_spec = np.array(utterances_spec)
         print(utterances_spec.shape)
         if i<train_speaker_num:      # save spectrogram as numpy file
-            i = i + 26
             np.save(os.path.join(config.train_path, "speaker%d.npy"%i), utterances_spec)
-            i = i - 26
         else:
             np.save(os.path.join(config.test_path, "speaker%d.npy"%(i-train_speaker_num)), utterances_spec)
-
 
 if __name__ == "__main__":
     extract_noise()

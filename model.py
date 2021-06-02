@@ -84,89 +84,6 @@ def train(path, m, n):
                 print("model is saved!")
 
 
-#Verify Session
-def verify(path, m, n):
-    
-    tf.reset_default_graph()
-
-    # draw graph
-    enroll = tf.placeholder(shape=[None, n*m, 40], dtype=tf.float32) # enrollment batch (time x batch x n_mel)
-    verif = tf.placeholder(shape=[None, n*m, 40], dtype=tf.float32)  # verification batch (time x batch x n_mel)
-    batch = tf.concat([enroll, verif], axis=1)
-
-    # embedding lstm (3-layer default)
-    with tf.variable_scope("lstm"):
-        lstm_cells = [tf.contrib.rnn.LSTMCell(num_units=config.hidden, num_proj=config.proj) for i in range(config.num_layer)]
-        lstm = tf.contrib.rnn.MultiRNNCell(lstm_cells)    # make lstm op and variables
-        outputs, _ = tf.nn.dynamic_rnn(cell=lstm, inputs=batch, dtype=tf.float32, time_major=True)   # for TI-VS must use dynamic rnn
-        embedded = outputs[-1]                            # the last ouput is the embedded d-vector
-        embedded = normalize(embedded)                    # normalize
-
-    print("embedded size: ", embedded.shape)
-
-    # enrollment embedded vectors (speaker model)
-    enroll_embed = normalize(tf.reduce_mean(tf.reshape(embedded[:n*m, :], shape= [n, m, -1]), axis=1))
-    # verification embedded vectors
-    verif_embed = embedded[n*m:, :]
-
-    cos_sim = cossim(enroll_embed, verif_embed)
-
-    saver = tf.train.Saver(var_list=tf.global_variables())
-    with tf.Session() as sess:
-        tf.global_variables_initializer().run()
-
-        # load model
-        print("model path :", path)
-        ckpt = tf.train.get_checkpoint_state(checkpoint_dir=os.path.join(path, "Check_Point"))
-        ckpt_list = ckpt.all_model_checkpoint_paths
-        loaded = 0
-        for model in ckpt_list:
-            if config.model_num == int(model.split('-')[-1]):    # find ckpt file which matches configuration model number
-                print("ckpt file is loaded !", model)
-                loaded = 1
-                saver.restore(sess, model)  # restore variables from selected ckpt file
-                break
-
-        if loaded == 0:
-            raise AssertionError("ckpt file does not exist! Check config.model_num or config.model_path.")
-
-        print("test file path : ", config.test_path)
-
-        # return similarity matrix after enrollment and verification
-        # time1 = time.time() # for check inference time
-        
-        S = sess.run(cos_sim, feed_dict = {enroll:generate_enroll_batch(), verif:generate_verif_batch()})
-        # S = S.reshape([n, m, -1])
-        # time2 = time.time()
-
-        # np.set_printoptions(precision=2)
-        # print("inference time for %d utterences : %0.2fs"%(2*m*n, time2-time1))
-        print(S)    # print similarity matrix
-
-        # calculating EER
-        # diff = 1; EER=0; EER_thres = 0; EER_FAR=0; EER_FRR=0
-
-        # # through thresholds calculate false acceptance ratio (FAR) and false reject ratio (FRR)
-        # for thres in [0.01*i+0.5 for i in range(50)]:
-        #     S_thres = S>thres
-
-        #     # False acceptance ratio = false acceptance / mismatched population (enroll speaker != verification speaker)
-        #     FAR = sum([np.sum(S_thres[i])-np.sum(S_thres[i,:,i]) for i in range(n)])/(n-1)/m/n
-
-        #     # False reject ratio = false reject / matched population (enroll speaker = verification speaker)
-        #     FRR = sum([m-np.sum(S_thres[i][:,i]) for i in range(n)])/m/n
-
-        #     # Save threshold when FAR = FRR (=EER)
-        #     if diff> abs(FAR-FRR):
-        #         diff = abs(FAR-FRR)
-        #         EER = (FAR+FRR)/2
-        #         EER_thres = thres
-        #         EER_FAR = FAR
-        #         EER_FRR = FRR
-
-        # print("\nEER : %0.2f (thres:%0.2f, FAR:%0.2f, FRR:%0.2f)"%(EER,EER_thres,EER_FAR,EER_FRR))
-
-
 # Test Session
 def test(path, m, n):
     tf.reset_default_graph()
@@ -251,3 +168,60 @@ def test(path, m, n):
                 EER_FRR = FRR
 
         print("\nEER : %0.2f (thres:%0.2f, FAR:%0.2f, FRR:%0.2f)"%(EER,EER_thres,EER_FAR,EER_FRR))
+
+#Verify Session
+def verify(path, m = 1, n = 1):
+    
+    tf.reset_default_graph()
+
+    # draw graph
+    enroll = tf.placeholder(shape=[None, n*m, 40], dtype=tf.float32) # enrollment batch (time x batch x n_mel)
+    verif = tf.placeholder(shape=[None, n*m, 40], dtype=tf.float32)  # verification batch (time x batch x n_mel)
+    batch = tf.concat([enroll, verif], axis=1)
+
+    # embedding lstm (3-layer default)
+    with tf.variable_scope("lstm"):
+        lstm_cells = [tf.contrib.rnn.LSTMCell(num_units=config.hidden, num_proj=config.proj) for i in range(config.num_layer)]
+        lstm = tf.contrib.rnn.MultiRNNCell(lstm_cells)    # make lstm op and variables
+        outputs, _ = tf.nn.dynamic_rnn(cell=lstm, inputs=batch, dtype=tf.float32, time_major=True)   # for TI-VS must use dynamic rnn
+        embedded = outputs[-1]                            # the last ouput is the embedded d-vector
+        embedded = normalize(embedded)                    # normalize
+
+    print("embedded size: ", embedded.shape)
+
+    # enrollment embedded vectors (speaker model)
+    enroll_embed = normalize(tf.reduce_mean(tf.reshape(embedded[:n*m, :], shape= [n, m, -1]), axis=1))
+    # verification embedded vectors
+    verif_embed = embedded[n*m:, :]
+
+    cos_sim = cossim(enroll_embed, verif_embed)
+
+    threshold = 0.85
+
+    saver = tf.train.Saver(var_list=tf.global_variables())
+    with tf.Session() as sess:
+        tf.global_variables_initializer().run()
+
+        # load model
+        print("model path :", path)
+        ckpt = tf.train.get_checkpoint_state(checkpoint_dir=os.path.join(path, "Check_Point"))
+        ckpt_list = ckpt.all_model_checkpoint_paths
+        loaded = 0
+        for model in ckpt_list:
+            if config.model_num == int(model.split('-')[-1]):    # find ckpt file which matches configuration model number
+                print("ckpt file is loaded !", model)
+                loaded = 1
+                saver.restore(sess, model)  # restore variables from selected ckpt file
+                break
+
+        if loaded == 0:
+            raise AssertionError("ckpt file does not exist! Check config.model_num or config.model_path.")
+        
+        S = sess.run(cos_sim, feed_dict = {enroll:generate_enroll_batch(), verif:generate_verif_batch()})
+
+        print(S)    # print similarity matrix
+
+        if (S >= threshold): 
+            print("Same person")
+        else: 
+            print("Different person")
