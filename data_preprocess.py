@@ -8,9 +8,9 @@ from utils import keyword_spot
 config = get_config()   # get arguments from parser
 
 # downloaded dataset path
-audio_path= r'C:\Users\LG\Documents\DataSets\Vctk\data'                                          # utterance dataset
-clean_path = r'C:\Users\LG\Documents\Deep_learning\speaker_vertification\clean_testset_wav'  # clean dataset
-noisy_path = r'C:\Users\LG\Documents\Deep_learning\speaker_vertification\noisy_testset_wav'  # noisy dataset
+audio_path= r'F:\DataSet\train'                                          # utterance dataset
+clean_path = r'F:\DataSet\clean_testset_wav'  # clean dataset
+noisy_path = r'F:\DataSet\noisy_testset_wav'  # noisy dataset
 
 
 def extract_noise():
@@ -20,7 +20,7 @@ def extract_noise():
     print("start noise extraction!")
     os.makedirs(config.noise_path, exist_ok=True)              # make folder to save noise file
     total = len(os.listdir(clean_path))                        # total length of audio files
-    batch_frames = config.N * config.M * config.tdsv_frame     # TD-SV frame number of each batch
+    batch_frames = config.speaker_number * config.utterance_number * config.tdsv_frame     # TD-SV frame number of each batch
     stacked_noise = []
     stacked_len = 0
     k = 0
@@ -103,6 +103,7 @@ def save_spectrogram_tisv():
     utter_min_len = (config.tisv_frame * config.hop + config.window) * config.sr    # lower bound of utterance length
     total_speaker_num = len(os.listdir(audio_path))
     train_speaker_num= (total_speaker_num//10)*9            # split total data 90% train and 10% test
+    # train_speaker_num= 37
     print("total speaker number : %d"%total_speaker_num)
     print("train : %d, test : %d"%(train_speaker_num, total_speaker_num-train_speaker_num))
     for i, folder in enumerate(os.listdir(audio_path)):
@@ -132,7 +133,9 @@ def save_spectrogram_tisv():
         utterances_spec = np.array(utterances_spec)
         print(utterances_spec.shape)
         if i<train_speaker_num:      # save spectrogram as numpy file
+            i = i + 26
             np.save(os.path.join(config.train_path, "speaker%d.npy"%i), utterances_spec)
+            i = i - 26
         else:
             np.save(os.path.join(config.test_path, "speaker%d.npy"%(i-train_speaker_num)), utterances_spec)
 

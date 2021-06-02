@@ -10,14 +10,14 @@ config = get_config()
 
 
 def keyword_spot(spec):
-    """ Keyword detection for data preprocess
+    """ Keyword detection for data preprocesss
         For VTCK data I truncate last 80 frames of trimmed audio - "Call Stella"
     :return: 80 frames spectrogram
     """
     return spec[:, -config.tdsv_frame:]
 
 
-def random_batch(speaker_num=config.N, utter_num=config.M, shuffle=True, noise_filenum=None, utter_start=0):
+def random_batch(speaker_num=config.speaker_number, utter_num=config.utterance_number, shuffle=True, noise_filenum=None, utter_start=0):
     """ Generate 1 batch.
         For TD-SV, noise is added to each utterance.
         For TI-SV, random frame length is applied to each batch of utterances (140-180 frames)
@@ -92,6 +92,48 @@ def random_batch(speaker_num=config.N, utter_num=config.M, shuffle=True, noise_f
 
     return utter_batch
 
+def generate_enroll_batch(speaker_num = 1, enroll_num = 1, enroll_start = 0):
+    path = config.enroll_path
+    np_file_list = os.listdir(path)
+    total_speaker = len(np_file_list)
+
+    selected_files = np_file_list[:speaker_num]                # select first N speakers
+
+    enroll_batch = []
+
+    for file in selected_files:
+        enrolls = np.load(os.path.join(path, file))
+        enroll_batch.append(enrolls[enroll_start: enroll_start + enroll_num])
+
+    enroll_batch = np.concatenate(enroll_batch, axis=0)
+    
+    enroll_batch = enroll_batch[:,:,:160]               # for train session, fixed length slicing of input batch
+
+    enroll_batch = np.transpose(enroll_batch,
+     axes=(2,0,1))     # transpose [frames, batch, n_mels]
+
+    return enroll_batch
+
+def generate_verif_batch(speaker_num = 1, verif_num = 1, verif_start = 0):
+    path = config.verify_path
+    np_file_list = os.listdir(path)
+    total_speaker = len(np_file_list)
+
+    selected_files = np_file_list[:speaker_num]                # select first N speakers
+
+    verif_batch = []
+
+    for file in selected_files:
+        verifs = np.load(os.path.join(path, file))
+        verif_batch.append(verifs[verif_start: verif_start + verif_num])
+
+    verif_batch = np.concatenate(verif_batch, axis=0)
+    
+    verif_batch = verif_batch[:,:,:160]               # for train session, fixed length slicing of input batch
+
+    verif_batch = np.transpose(verif_batch, axes=(2,0,1))     # transpose [frames, batch, n_mels]
+
+    return verif_batch
 
 def normalize(x):
     """ normalize the last dimension vector of the input matrix
@@ -112,7 +154,7 @@ def cossim(x,y, normalized=True):
         return tf.reduce_sum(x*y)/x_norm/y_norm
 
 
-def similarity(embedded, w, b, N=config.N, M=config.M, P=config.proj, center=None):
+def similarity(embedded, w, b, N=config.speaker_number, M=config.utterance_number, P=config.proj, center=None):
     """ Calculate similarity matrix from embedded utterance batch (NM x embed_dim) eq. (9)
         Input center to test enrollment. (embedded for verification)
     :return: tf similarity matrix (NM x N)
@@ -140,7 +182,7 @@ def similarity(embedded, w, b, N=config.N, M=config.M, P=config.proj, center=Non
     return S
 
 
-def loss_cal(S, type="softmax", N=config.N, M=config.M):
+def loss_cal(S, type="softmax", N=config.speaker_number, M=config.utterance_number):
     """ calculate loss with similarity matrix(S) eq.(6) (7) 
     :type: "softmax" or "contrast"
     :return: loss
