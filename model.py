@@ -4,6 +4,7 @@ import os
 import time
 
 from tensorflow.python.ops.array_ops import _constant_if_small
+from tensorflow.python.training.checkpoint_management import checkpoint_exists
 from utils import cossim, generate_enroll_batch, generate_verif_batch, random_batch, normalize, similarity, loss_cal, optim
 from configuration import get_config
 from tensorflow.contrib import rnn
@@ -206,6 +207,7 @@ def verify(path, m = 1, n = 1):
         print("model path :", path)
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir=os.path.join(path, "Check_Point"))
         ckpt_list = ckpt.all_model_checkpoint_paths
+        print(ckpt_list)
         loaded = 0
         for model in ckpt_list:
             if config.model_num == int(model.split('-')[-1]):    # find ckpt file which matches configuration model number

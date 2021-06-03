@@ -41,7 +41,7 @@ model_arg.add_argument('--proj', type=int, default=64, help="projection dimensio
 model_arg.add_argument('--num_layer', type=int, default=3, help="number of lstm layers")
 model_arg.add_argument('--restore', type=str2bool, default=False, help="restore model or not")
 model_arg.add_argument('--model_path', type=str, default='./model', help="model directory to save or load")
-model_arg.add_argument('--model_num', type=int, default=5, help="number of ckpt file to load")
+model_arg.add_argument('--model_num', type=int, default=1, help="number of ckpt file to load")
 
 # Training Parameters
 train_arg = parser.add_argument_group('Training')
