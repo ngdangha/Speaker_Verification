@@ -207,7 +207,6 @@ def verify(path, m = 1, n = 1):
         print("model path :", path)
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir=os.path.join(path, "Check_Point"))
         ckpt_list = ckpt.all_model_checkpoint_paths
-        print(ckpt_list)
         loaded = 0
         for model in ckpt_list:
             if config.model_num == int(model.split('-')[-1]):    # find ckpt file which matches configuration model number
