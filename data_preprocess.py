@@ -8,7 +8,7 @@ from utils import keyword_spot
 config = get_config()   # get arguments from parser
 
 # downloaded dataset path
-audio_path= r'F:\DataSet\train'                                          # utterance dataset
+audio_path= r'F:\DataSet\train_test'          # utterance dataset
 clean_path = r'F:\DataSet\clean_testset_wav'  # clean dataset
 noisy_path = r'F:\DataSet\noisy_testset_wav'  # noisy dataset
 
@@ -100,9 +100,11 @@ def save_spectrogram_tisv():
     os.makedirs(config.train_path, exist_ok=True)   # make folder to save train file
     os.makedirs(config.test_path, exist_ok=True)    # make folder to save test file
 
+    # utter_min_len = 0
     utter_min_len = (config.tisv_frame * config.hop + config.window) * config.sr    # lower bound of utterance length
     total_speaker_num = len(os.listdir(audio_path))
-    train_speaker_num= (total_speaker_num//10)*9            # split total data 90% train and 10% test
+    # train_speaker_num= (total_speaker_num//10)*9            # split total data 90% train and 10% test
+    train_speaker_num= total_speaker_num
     print("total speaker number : %d"%total_speaker_num)
     print("train : %d, test : %d"%(train_speaker_num, total_speaker_num-train_speaker_num))
     for i, folder in enumerate(os.listdir(audio_path)):
@@ -137,7 +139,7 @@ def save_spectrogram_tisv():
             np.save(os.path.join(config.test_path, "speaker%d.npy"%(i-train_speaker_num)), utterances_spec)
 
 if __name__ == "__main__":
-    extract_noise()
+    # extract_noise()
     if config.tdsv:
         save_spectrogram_tdsv()
     else:

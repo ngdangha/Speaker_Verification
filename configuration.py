@@ -22,11 +22,13 @@ def str2bool(v):
 # Data Preprocess Arguments
 data_arg = parser.add_argument_group('Data')
 data_arg.add_argument('--noise_path', type=str, default='./noise', help="noise dataset directory")
+data_arg.add_argument('--raw_path', type=str, default='./raw_data', help="raw dataset directory")
 data_arg.add_argument('--train_path', type=str, default='./train_tisv', help="train dataset directory")
 data_arg.add_argument('--test_path', type=str, default='./test_tisv', help="test dataset directory")
 data_arg.add_argument('--enroll_path', type=str, default='./enroll', help="enroll dataset directory")
 data_arg.add_argument('--verify_path', type=str, default='./verify', help="verify dataset directory")
 data_arg.add_argument('--tdsv', type=str2bool, default=False, help="text dependent or not")
+data_arg.add_argument('--verify', type=str2bool, default=True, help="verify or not")
 data_arg.add_argument('--sr', type=int, default=8000, help="sampling rate")
 data_arg.add_argument('--nfft', type=int, default=512, help="fft kernel size")
 data_arg.add_argument('--window', type=int, default=0.025, help="window length (ms)")
