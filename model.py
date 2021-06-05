@@ -197,7 +197,7 @@ def verify(path, m = 1, n = 1):
 
     cos_sim = cossim(enroll_embed, verif_embed)
 
-    threshold = 0.85
+    threshold = 0.25
 
     saver = tf.train.Saver(var_list=tf.global_variables())
     with tf.Session() as sess:
@@ -220,9 +220,11 @@ def verify(path, m = 1, n = 1):
         
         S = sess.run(cos_sim, feed_dict = {enroll:generate_enroll_batch(), verif:generate_verif_batch()})
 
-        print(S)    # print similarity matrix
+        print(S)    # print similarity cos
+
+        result = "Different person"
 
         if (S >= threshold): 
-            print("Same person")
-        else: 
-            print("Different person")
+            result="Same person"
+
+    return(result)

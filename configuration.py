@@ -1,5 +1,4 @@
 import argparse
-import numpy as np
 
 parser = argparse.ArgumentParser()    # make parser
 
@@ -59,5 +58,4 @@ train_arg.add_argument('--beta2', type=float, default=0.9, help="beta2")
 train_arg.add_argument('--iteration', type=int, default=60000, help="max iteration")
 train_arg.add_argument('--comment', type=str, default='', help="any comment")
 
-config = get_config()
-print(config)           # print all the arguments
+config = get_config()    # print all the arguments

@@ -10,6 +10,6 @@ model_path = "./model"
 
 if __name__ == "__main__":
     if os.path.isdir(model_path):
-        verify(model_path)
+        print(verify(model_path))
     else:
         raise AssertionError("model path doesn't exist!")

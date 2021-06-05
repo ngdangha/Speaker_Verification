@@ -1,12 +1,12 @@
 import os
 import librosa
 import numpy as np
-import matplotlib.pyplot as plt
 import sounddevice as sd
+
+import tkinter as tk
 
 from scipy.io.wavfile import write
 from configuration import get_config
-from utils import keyword_spot
 
 config = get_config()   # get arguments from parser
 fs = 8000  # Sample rate
@@ -27,7 +27,7 @@ def save_spectrogram(path):
 
     utter_min_len = (config.tisv_frame * config.hop + config.window) * config.sr    # lower bound of utterance length
     total_speaker_num = len(os.listdir(audio_path))
-    train_speaker_num= (total_speaker_num//10)*9            # split total data 90% train and 10% test
+    train_speaker_num = total_speaker_num   
     print("total speaker number : %d"%total_speaker_num)
     print("train : %d, test : %d"%(train_speaker_num, total_speaker_num-train_speaker_num))
     for i, folder in enumerate(os.listdir(audio_path)):
@@ -56,6 +56,14 @@ def save_spectrogram(path):
         utterances_spec = np.array(utterances_spec)
         print(utterances_spec.shape)
         np.save(os.path.join(path, "speaker%d.npy"%i), utterances_spec)
+
+def enrollVoice():
+    record()
+    save_spectrogram(config.enroll_path)
+
+def verifyVoice():
+    record()
+    save_spectrogram(config.verify_path)
 
 if __name__ == "__main__":
     record()
